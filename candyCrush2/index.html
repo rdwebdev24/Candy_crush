@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+     <meta charset="UTF-8">
+     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>candy - 2</title>
+     <style>
+          body{
+               background-image: url('https://c4.wallpaperflare.com/wallpaper/920/210/451/video-game-candy-crush-soda-saga-wallpaper-preview.jpg');
+               background-repeat: no-repeat;
+               background-size: 120% 100%;
+          }
+          .grid {
+               width: 600px;
+               height: 600px;
+               display: flex;
+               flex-wrap: wrap;
+          }
+
+          .grid div {
+               margin: 2px;
+               width: 70px;
+               height: 70px;
+               border-radius: 25%;
+          }
+          #score{
+               position:absolute;
+               top: 300px;
+               right: 430px;
+               font-size: 3rem;
+               font-weight: bold;
+          }
+     </style>
+</head>
+
+<body>
+     <div class="grid"></div>
+     <div id="score">Score : <span id="Score"></span></div>
+
+     <script>
+          window.addEventListener('DOMContentLoaded', () => {
+               let score = document.getElementById('Score')
+               let grid = document.querySelector('.grid')
+               let width = 8
+               let squares = []
+               let colorArr = [
+                    './images/blue-candy.png',
+                    "./images/green-candy.png",
+                    "./images/orange-candy.png",
+                    "./images/purple-candy.png",
+                    "./images/red-candy.png",
+                    "./images/yellow-candy.png"
+                    
+               ]
+
+               let user = {
+                    decided: true,
+                    swap: false,
+                    score: 0
+               }
+
+               let crush = new Audio('./Wrapped Sound ! Candy Crush ! Notification Tone.mp3')
+               let BgSong = new Audio('./Candy Crush Game Theme.mp3')
+               BgSong.play()
+
+               function audioLoop(){
+                    if(Math.floor(BgSong.currentTime) === 20){
+                         BgSong.play()
+                    }
+               }
+
+               // crating board 
+               for (let i = 0; i < width * width; i++) {
+                    let square = document.createElement('div')
+                    square.setAttribute('id', i)
+                    squares.push(square)
+                    let random = Math.floor(Math.random() * colorArr.length)
+                    square.style.backgroundImage = `url('${colorArr[random]}')`
+                    grid.appendChild(square)
+
+               }
+
+               squares.forEach((element, index) => {
+                    element.addEventListener("click", () => {
+                         if (user.decided) {
+                              decidedIndex = index
+                              element.style.border = '2px solid red'
+                              element.style.boxShadow = '2px 2px 10px 5px red'
+                              decidedcolor = element.style.backgroundImage
+                              user.decided = false
+                         } else {
+                              swapIndex = index
+                              squares[decidedIndex].style.border = ''
+                              squares[decidedIndex].style.boxShadow = ''
+                              swapcolor = element.style.backgroundImage
+                              user.decided = true
+                              rowOfThree(swapIndex)
+                         }
+                    })
+               });
+
+               // drop candies 
+               function moveDown() {
+                    for (let i = 0; i < 55; i++) {
+                         if (squares[i + width].style.backgroundImage === "") {
+                              squares[i + width].style.backgroundImage = squares[i].style.backgroundImage
+                              squares[i].style.backgroundImage = ""
+                              const firstRow = [0, 1, 2, 3, 4, 5, 6, 7]
+                              const isfirstRow = firstRow.includes(i)
+                              if (isfirstRow && squares[i].style.backgroundImage === "") {
+                                   console.log("randomColor")
+                                   let randomColor = Math.floor(Math.random() * colorArr.length)
+                                   squares[i].style.backgroundImage = `url('${colorArr[randomColor]}')`
+                              }
+                         } else {
+                              if (squares[i].style.backgroundImage === "") {
+                                   let randomColor = Math.floor(Math.random() * colorArr.length)
+                                   squares[i].style.backgroundImage =  `url('${colorArr[randomColor]}')`
+                              }
+                         }
+                    }
+               }
+
+
+
+               // valid move 
+
+               function rowOfThree(swapIndex) {
+
+                    validMoves = [
+                         decidedIndex + 1,
+                         decidedIndex - 1,
+                         decidedIndex + width,
+                         decidedIndex - width,
+                    ]
+                    validMove = validMoves.includes(swapIndex)
+
+                    if (swapIndex && validMove) {
+                         squares[swapIndex].style.backgroundImage = decidedcolor
+                         squares[decidedIndex].style.backgroundImage = swapcolor
+                    }
+               }
+
+               // check for three 
+
+               function checkRowForThree() {
+                    for (let i = 0; i < 61; i++) {
+                         let rowOfThree = [i, i + 1, i + 2]
+                         let decidedColor2 = squares[i].style.backgroundImage
+                         const isBlank = squares[i].style.backgroundImage === ''
+
+                         const notvalid = [6, 7, 14, 15, 22, 23, 30, 31, 38, 38, 46, 47, 54, 55]
+                         if (notvalid.includes(i)) {
+                              continue
+                         }
+
+                         if (rowOfThree.every(index => squares[index].style.backgroundImage === decidedColor2 && !isBlank)) {
+                              user.score += 3
+                              score.innerHTML = user.score
+                              crush.play()
+                              rowOfThree.forEach(index => {
+                                   squares[index].style.backgroundImage = ""
+                              })
+                         }
+                    }
+
+               }
+               function checkColForThree() {
+                    for (let i = 0; i < 47; i++) {
+                         let ColOfThree = [i, i + width, i + width * 2]
+                         let decidedColor2 = squares[i].style.backgroundImage
+                         const isBlank = squares[i].style.backgroundImage === ''
+
+
+                         if (ColOfThree.every(index => squares[index].style.backgroundImage === decidedColor2 && !isBlank)) {
+                              user.score += 3
+                              score.innerHTML = user.score
+                              crush.play()
+                              ColOfThree.forEach(index => {
+                                   squares[index].style.backgroundImage = ""
+                              })
+                         }
+                    }
+
+               }
+               function checkRowForFour() {
+                    for (let i = 0; i < 61; i++) {
+                         let rowOfFour = [i, i + 1, i + 2, i + 3]
+                         let decidedColor2 = squares[i].style.backgroundImage
+                         const isBlank = squares[i].style.backgroundImage === ''
+                         
+                         const notvalid = [5, 6, 7, 13, 14, 15, 21, 22, 23, 29, 30, 31, 37, 38, 38, 45, 46, 47, 53, 54, 55]
+                         if (notvalid.includes(i)) {
+                              continue
+                         }
+                         
+                         if (rowOfFour.every(index => squares[index].style.backgroundImage === decidedColor2 && !isBlank)) {
+                              user.score += 4
+                              score.innerHTML = user.score
+                              crush.play()
+                              rowOfFour.forEach(index => {
+                                   squares[index].style.backgroundImage = ""
+                              })
+                         }
+                    }
+
+               }
+               function checkColForFour() {
+                    for (let i = 0; i < 47; i++) {
+                         let ColOfFour = [i, i + width, i + width * 2, i + width * 3]
+                         let decidedColor2 = squares[i].style.backgroundImage
+                         const isBlank = squares[i].style.backgroundImage === ''
+
+
+                         if (ColOfFour.every(index => squares[index].style.backgroundImage === decidedColor2 && !isBlank)) {
+                              user.score += 4
+                              score.innerHTML = user.score
+                              crush.play()
+                              ColOfFour.forEach(index => {
+                                   squares[index].style.backgroundImage = ""
+                              })
+                         }
+                    }
+
+               }
+
+               checkColForFour()
+               checkRowForFour()
+               checkColForThree()
+               checkRowForThree()
+               setInterval(() => {
+                    audioLoop()
+                    
+                    checkColForFour()
+                    checkRowForFour()
+                    checkRowForThree()
+                    checkColForThree()
+                    moveDown()
+               }, 100);
+          })
+     </script>
+</body>
+
+</html>
